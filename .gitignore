@@ -1,0 +1,13 @@
+*.vscode
+.install.stamp
+__pycache__
+*.egg*
+*outputs
+
+*.mp4
+*.mov
+*.png
+*.pdf
+*.jpeg
+*.p
+*.ipynb_checkpoints/
