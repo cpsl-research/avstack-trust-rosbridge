@@ -189,7 +189,16 @@ class MultiAgentTrustEstimator(Node):
         # convert track trust messages
         track_trust = TrustArray()
         track_trust.header = header
-        track_trust.trusts = []
+        track_trust.trusts = [
+            Trust(
+                identifier=f"track{k}",
+                alpha=v.alpha,
+                beta=v.beta,
+                mean=v.mean,
+                variance=v.variance,
+            )
+            for k, v in trust_out.track_trust.items()
+        ]
 
         # publish trust outputs
         self.publisher_agent_trust.publish(agent_trust)

@@ -160,11 +160,12 @@ class TrustVisualizer(Node):
             for id_remove in ids_remove:
                 actives.remove(id_remove)
 
-    def plt_func(self, _):
+    def plt_func(self, _, dynamic_ylim: bool = False):
         """Function for for adding data to axis.
 
         Args:
             _ : Dummy variable that is required for matplotlib animation.
+            dynamic_ylim: boolean on whether to enable dynamic ylim adjustment
 
         Returns:
             Axes object for matplotlib
@@ -221,7 +222,12 @@ class TrustVisualizer(Node):
                         )
                     else:
                         plot["dist"][identifier].set_ydata(pdfs)
-                    ylims[1] = max(5, min(20, max(pdfs) + 0.1))
+
+                    # -- set ylim
+                    if dynamic_ylim:
+                        ylims[1] = max(5, min(20, max(pdfs) + 0.1))
+                    else:
+                        ylims[1] = 5
 
                 # remove things
                 for id_remove in ids_remove:
