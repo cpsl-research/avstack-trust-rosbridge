@@ -5,3 +5,7 @@ string identifier
 float64 alpha
 
 float64 beta
+
+float64 mean
+
+float64 variance

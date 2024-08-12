@@ -1,19 +1,18 @@
 import rclpy
-from avstack_msgs.msg import BoxTrackArray
-from geometry_msgs.msg import PolygonStamped
-from message_filters import ApproximateTimeSynchronizer, Subscriber
-from rclpy.node import Node
-from tf2_ros.buffer import Buffer
-from tf2_ros.transform_listener import TransformListener
-from std_msgs.msg import Header, String
-
 from avstack_bridge import Bridge
 from avstack_bridge.geometry import GeometryBridge
 from avstack_bridge.tracks import TrackBridge
 from avstack_bridge.transform import do_transform_boxtrack
-from trust_msgs.msg import Trust, TrustArray
-
+from avstack_msgs.msg import BoxTrackArray
+from geometry_msgs.msg import PolygonStamped
 from mate.estimator import TrustEstimator
+from message_filters import ApproximateTimeSynchronizer, Subscriber
+from rclpy.node import Node
+from std_msgs.msg import Header, String
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+
+from trust_msgs.msg import Trust, TrustArray
 
 
 class FakeModel:
@@ -41,7 +40,6 @@ class MultiAgentTrustEstimator(Node):
         # listen to transform information
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self, qos=qos)
-
 
         # subscribe to initialization message (optional)
         self.subscriber_init = self.create_subscription(
@@ -119,7 +117,7 @@ class MultiAgentTrustEstimator(Node):
         # store track messages
         agent_tracks = {}
         cc_tracks = None
-        for i, msg in enumerate(args[:self.n_agents+1]):  # first are track messages
+        for i, msg in enumerate(args[: self.n_agents + 1]):  # first are track messages
             if i < (self.n_agents):
                 # convert to global reference frame
                 agent = f"agent{i}"
@@ -129,7 +127,9 @@ class MultiAgentTrustEstimator(Node):
                         msg.header.frame_id,
                         msg.header.stamp,
                     )
-                    msg.tracks = [do_transform_boxtrack(trk, tf_world_trk) for trk in msg.tracks]
+                    msg.tracks = [
+                        do_transform_boxtrack(trk, tf_world_trk) for trk in msg.tracks
+                    ]
                     msg.header = tf_world_trk.header
                 agent_tracks[agent] = TrackBridge.tracks_to_avstack(msg)
             else:
@@ -139,7 +139,7 @@ class MultiAgentTrustEstimator(Node):
         # store FOV and pose messages
         agent_fovs = {}
         agent_poses = {}
-        for i, msg in enumerate(args[self.n_agents+1:]):  # second are fov messages
+        for i, msg in enumerate(args[self.n_agents + 1 :]):  # second are fov messages
             agent = f"agent{i}"
             # FOV
             agent_fovs[agent] = GeometryBridge.polygon_to_avstack(msg)
@@ -152,7 +152,8 @@ class MultiAgentTrustEstimator(Node):
                 msg.header.stamp,
             )
             agent_poses[agent] = GeometryBridge.position_to_avstack(
-                tf_world_agent.transform.translation, header=msg.header,
+                tf_world_agent.transform.translation,
+                header=msg.header,
             )
             frame = 0
             timestamp = Bridge.rostime_to_time(msg.header.stamp)
@@ -178,7 +179,9 @@ class MultiAgentTrustEstimator(Node):
             Trust(
                 identifier=k,
                 alpha=v.alpha,
-                beta=v.beta
+                beta=v.beta,
+                mean=v.mean,
+                variance=v.variance,
             )
             for k, v in trust_out.agent_trust.items()
         ]

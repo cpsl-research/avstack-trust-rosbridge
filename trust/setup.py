@@ -15,6 +15,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
         (os.path.join("share", package_name, "launch"), glob("launch/*.py")),
+        (os.path.join("share", package_name, "samples"), glob("samples/*.py")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -24,6 +25,11 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["mate = trust.mate:main"],
+        "console_scripts": [
+            "mate = trust.mate:main",
+            "visualizer = trust.visualizer:main",
+            "agent_pub_sample = samples.AgentTrustSample:main",
+            "track_pub_sample = samples.TrackTrustSample:main",
+        ],
     },
 )
