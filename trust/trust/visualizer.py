@@ -1,7 +1,19 @@
 #! /usr/bin/env python3
 
+import os
 import threading
 from functools import partial
+
+#################################################################
+# fmt: off
+# this is needed to allow for importing of avstack/bridge things
+# while also using matplotlib/pyqt5
+import cv2  # noqa # pylint: disable=unused-import
+
+
+os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH")
+# fmt: on
+#################################################################
 
 import matplotlib.animation as anim
 import matplotlib.colors as mcolors
@@ -11,14 +23,16 @@ import rclpy
 from rclpy.node import Node
 from scipy.stats import beta
 
-from trust_msgs.msg import TrustArray
+from trust_msgs.msg import TrustArray as TrustArrayRos
+
+from .bridge import TrustBridge
 
 
 agent_colors = {
-    "agent0": "#f9f06b",
-    "agent1": "#cdaB8f",
-    "agent2": "#dc8add",
-    "agent3": "#99c1f1",
+    0: "#f9f06b",
+    1: "#cdaB8f",
+    2: "#dc8add",
+    3: "#99c1f1",
 }
 
 track_colors = list(mcolors.TABLEAU_COLORS.keys())
@@ -111,21 +125,21 @@ class TrustVisualizer(Node):
         )
         self.cbg = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
         self.sub_agent_trust = self.create_subscription(
-            TrustArray,
+            TrustArrayRos,
             "agent_trust",
             partial(self.trust_callback, self.agent_trust_data, self.agent_ids_active),
             qos_profile=qos,
             callback_group=self.cbg,
         )
         self.sub_track_trust = self.create_subscription(
-            TrustArray,
+            TrustArrayRos,
             "track_trust",
             partial(self.trust_callback, self.track_trust_data, self.track_ids_active),
             qos_profile=qos,
             callback_group=self.cbg,
         )
 
-    def trust_callback(self, datastruct: dict, actives: list, msg: TrustArray):
+    def trust_callback(self, datastruct: dict, actives: list, msg: TrustArrayRos):
         """Callback for subscriber
 
         Args:
@@ -133,9 +147,12 @@ class TrustVisualizer(Node):
         """
         # lock thread
         with self._lock:
+            trust_array = TrustBridge.ros_to_trust_array(msg)
+
             # update values
             ids_active = set()
-            for trust in msg.trusts:
+            for trust_id in trust_array:
+                trust = trust_array[trust_id]
                 # add to active list
                 ids_active.add(trust.identifier)
                 actives.add(trust.identifier)
@@ -191,7 +208,8 @@ class TrustVisualizer(Node):
                         continue
 
                     # -- attributes
-                    id_int = int(identifier.replace("agent", "").replace("track", ""))
+                    # id_int = int(identifier.replace("agent", "").replace("track", ""))
+                    id_int = identifier
                     color = (
                         agent_colors[identifier] if i == 0 else get_track_color(id_int)
                     )

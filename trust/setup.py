@@ -26,7 +26,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "mate = trust.mate:main",
+            "estimator = trust.estimator:main",
             "visualizer = trust.visualizer:main",
             "agent_pub_sample = samples.AgentTrustSample:main",
             "track_pub_sample = samples.TrackTrustSample:main",

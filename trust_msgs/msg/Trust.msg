@@ -1,11 +1,9 @@
 # a message on the trust of an entity
 
-string identifier
+std_msgs/Header header
+
+uint32 identifier
 
 float64 alpha
 
 float64 beta
-
-float64 mean
-
-float64 variance

@@ -12,9 +12,10 @@ find_package(rosidl_default_generators REQUIRED)
 
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Psm.msg"
+  "msg/PsmArray.msg"
   "msg/Trust.msg"
   "msg/TrustArray.msg"
-  "msg/TrustStamped.msg"
   DEPENDENCIES std_msgs
 )
 
