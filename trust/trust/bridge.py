@@ -66,7 +66,9 @@ class TrustBridge:
 
     @staticmethod
     def trust_array_to_ros(trusts: TrustArray) -> TrustArrayRos:
-        trusts_ros = [TrustBridge.trust_to_ros(trust) for trust in trusts.trusts.values()]
+        trusts_ros = [
+            TrustBridge.trust_to_ros(trust) for trust in trusts.trusts.values()
+        ]
         header = Header(
             frame_id="world", stamp=Bridge.time_to_rostime(trusts.timestamp)
         )
