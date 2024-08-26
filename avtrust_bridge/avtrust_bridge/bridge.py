@@ -1,12 +1,12 @@
 from avstack_bridge import Bridge
-from mate.distributions import TrustArray, TrustBetaDistribution
-from mate.measurement import Psm, PsmArray
+from avtrust.distributions import TrustArray, TrustBetaDistribution
+from avtrust.measurement import Psm, PsmArray
 from std_msgs.msg import Header
 
-from trust_msgs.msg import Psm as PsmRos
-from trust_msgs.msg import PsmArray as PsmArrayRos
-from trust_msgs.msg import Trust as TrustRos
-from trust_msgs.msg import TrustArray as TrustArrayRos
+from avtrust_msgs.msg import Psm as PsmRos
+from avtrust_msgs.msg import PsmArray as PsmArrayRos
+from avtrust_msgs.msg import Trust as TrustRos
+from avtrust_msgs.msg import TrustArray as TrustArrayRos
 
 
 class TrustBridge:
@@ -14,7 +14,7 @@ class TrustBridge:
     # singleton methods
     # ----------------------------------
     @staticmethod
-    def psm_to_ros(psm: Psm) -> PsmRos:
+    def psm_avstack_to_ros(psm: Psm) -> PsmRos:
         return PsmRos(
             header=Header(
                 frame_id="world", stamp=Bridge.time_to_rostime(psm.timestamp)
@@ -26,7 +26,7 @@ class TrustBridge:
         )
 
     @staticmethod
-    def trust_to_ros(trust: TrustBetaDistribution) -> TrustRos:
+    def trust_avstack_to_ros(trust: TrustBetaDistribution) -> TrustRos:
         return TrustRos(
             header=Header(
                 frame_id="world", stamp=Bridge.time_to_rostime(trust.timestamp)
@@ -37,7 +37,7 @@ class TrustBridge:
         )
 
     @staticmethod
-    def ros_to_psm(msg: PsmRos) -> Psm:
+    def psm_ros_to_avstack(msg: PsmRos) -> Psm:
         return Psm(
             timestamp=Bridge.rostime_to_time(msg.header.stamp),
             target=msg.target,
@@ -47,7 +47,7 @@ class TrustBridge:
         )
 
     @staticmethod
-    def ros_to_trust(msg: TrustRos) -> TrustBetaDistribution:
+    def trust_ros_to_avstack(msg: TrustRos) -> TrustBetaDistribution:
         return TrustBetaDistribution(
             timestamp=Bridge.rostime_to_time(msg.header.stamp),
             identifier=msg.identifier,
@@ -59,15 +59,15 @@ class TrustBridge:
     # array methods
     # ----------------------------------
     @staticmethod
-    def psm_array_to_ros(psms: PsmArray) -> PsmArrayRos:
-        psms_ros = [TrustBridge.psm_to_ros(psm) for psm in psms]
+    def psm_array_avstack_to_ros(psms: PsmArray) -> PsmArrayRos:
+        psms_ros = [TrustBridge.psm_avstack_to_ros(psm) for psm in psms]
         header = Header(frame_id="world", stamp=Bridge.time_to_rostime(psms.timestamp))
         return PsmArrayRos(header=header, psms=psms_ros)
 
     @staticmethod
-    def trust_array_to_ros(trusts: TrustArray) -> TrustArrayRos:
+    def trust_array_avstack_to_ros(trusts: TrustArray) -> TrustArrayRos:
         trusts_ros = [
-            TrustBridge.trust_to_ros(trust) for trust in trusts.trusts.values()
+            TrustBridge.trust_avstack_to_ros(trust) for trust in trusts.trusts.values()
         ]
         header = Header(
             frame_id="world", stamp=Bridge.time_to_rostime(trusts.timestamp)
@@ -75,13 +75,13 @@ class TrustBridge:
         return TrustArrayRos(header=header, trusts=trusts_ros)
 
     @staticmethod
-    def ros_to_psm_array(msg: PsmArrayRos) -> PsmArray:
-        psms = [TrustBridge.ros_to_psm(psm) for psm in msg.psms]
+    def psm_array_ros_to_avstack(msg: PsmArrayRos) -> PsmArray:
+        psms = [TrustBridge.psm_ros_to_avstack(psm) for psm in msg.psms]
         timestamp = Bridge.rostime_to_time(msg.header.stamp)
         return PsmArray(timestamp=timestamp, psms=psms)
 
     @staticmethod
-    def ros_to_trust_array(msg: TrustArrayRos) -> TrustArray:
-        trusts = [TrustBridge.ros_to_trust(trust) for trust in msg.trusts]
+    def trust_array_ros_to_avstack(msg: TrustArrayRos) -> TrustArray:
+        trusts = [TrustBridge.trust_ros_to_avstack(trust) for trust in msg.trusts]
         timestamp = Bridge.rostime_to_time(msg.header.stamp)
         return TrustArray(timestamp=timestamp, trusts=trusts)

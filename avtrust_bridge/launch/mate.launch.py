@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     trust_measurement_config = PathJoinSubstitution(
         [
-            get_package_share_directory("trust"),
+            get_package_share_directory("avtrust_bridge"),
             "config",
             "trust_measurement.yaml",
         ]
@@ -15,14 +15,14 @@ def generate_launch_description():
 
     trust_updater_config = PathJoinSubstitution(
         [
-            get_package_share_directory("trust"),
+            get_package_share_directory("avtrust_bridge"),
             "config",
             "trust_updater.yaml",
         ]
     )
 
     trust_measurement = Node(
-        package="trust",
+        package="avtrust_bridge",
         executable="measurement",
         name="trust_estimator",
         parameters=[trust_measurement_config],
@@ -30,7 +30,7 @@ def generate_launch_description():
     )
 
     trust_updater = Node(
-        package="trust",
+        package="avtrust_bridge",
         executable="updater",
         name="trust_updater",
         parameters=[trust_updater_config],

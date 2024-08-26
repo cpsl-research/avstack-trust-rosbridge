@@ -1,7 +1,7 @@
 NAME := trust-ros
 INSTALL_STAMP := .install.stamp
 POETRY := $(shell command -v poetry 2> /dev/null)
-PYFOLDERS := trust
+PYFOLDERS := avtrust_bridge
 .DEFAULT_GOAL := help
 
 .PHONY: help
