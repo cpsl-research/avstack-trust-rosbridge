@@ -101,15 +101,7 @@ class TrustVisualizer(Node):
             self.axs[i, 1].grid()
 
         plt.tight_layout()
-
-        # create initial values to plot
-        self.last_timestamp = -np.inf
-        self.agent_ids_active = set()
-        self.agent_trust_data = {}
-        self.agent_trust_plot = {"bar": {}, "dist": {}}
-        self.track_ids_active = set()
-        self.track_trust_data = {}
-        self.track_trust_plot = {"bar": {}, "dist": {}}
+        self.reset()
 
         # x axis on the trust distribution
         npts = 1000
@@ -141,7 +133,44 @@ class TrustVisualizer(Node):
             callback_group=self.cbg,
         )
 
-    def trust_callback(self, datastruct: dict, actives: list, msg: TrustArrayRos):
+    def reset(self):
+        """Reset the lines in the plots"""
+        self.last_timestamp = -np.inf
+
+        # reset data structures
+        self.agent_ids_active = set()
+        self.agent_trust_data = {}
+        self.agent_trust_plot = {"bar": {}, "dist": {}}
+        self.track_ids_active = set()
+        self.track_trust_data = {}
+        self.track_trust_plot = {"bar": {}, "dist": {}}
+
+    def clear(self):
+        self.last_timestamp = -np.inf
+        self.agent_ids_active.clear()
+        self.track_ids_active.clear()
+        for k in self.agent_trust_data:
+            self.agent_trust_data[k].clear()
+        for k in self.track_trust_data:
+            self.track_trust_data[k].clear()
+        for values in self.agent_trust_plot.values():
+            for k2 in list(values.keys()):
+                try:
+                    values[k2].remove()
+                    del values[k2]
+                except (ValueError, KeyError):
+                    pass
+        for values in self.track_trust_plot.values():
+            for k2 in list(values.keys()):
+                try:
+                    values[k2].remove()
+                    del values[k2]
+                except (ValueError, KeyError):
+                    pass
+
+        # raise RuntimeError(str(self.track_trust_plot))
+
+    def trust_callback(self, datastruct: dict, actives: set, msg: TrustArrayRos):
         """Callback for subscriber
 
         Args:
@@ -149,13 +178,13 @@ class TrustVisualizer(Node):
         """
         # lock thread
         with self._lock:
+            # get trust data
             trust_array = TrustBridge.trust_array_ros_to_avstack(msg)
             timestamp = Bridge.rostime_to_time(msg.header.stamp)
             if timestamp < self.last_timestamp:
-                # self.reset()
-                pass
+                self.clear()
             else:
-                self.timestamp = timestamp
+                self.last_timestamp = timestamp
 
             # update values
             ids_active = set()
@@ -210,14 +239,17 @@ class TrustVisualizer(Node):
                 for idx, identifier in enumerate(data):
                     # -- check if still actively publishing data
                     if identifier not in active:
-                        ids_remove.append(identifier)
+                        try:
+                            ids_remove.append(identifier)
+                        except KeyError:
+                            continue
                         try:
                             plot["bar"][identifier].remove()
-                        except ValueError:
+                        except (ValueError, KeyError):
                             pass
                         try:
                             plot["dist"][identifier].remove()
-                        except ValueError:
+                        except (ValueError, KeyError):
                             pass
                         continue
 
