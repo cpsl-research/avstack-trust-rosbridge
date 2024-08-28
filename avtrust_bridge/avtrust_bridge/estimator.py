@@ -3,24 +3,24 @@ from avstack_bridge import Bridge
 from avstack_bridge.geometry import GeometryBridge
 from avstack_bridge.tracks import TrackBridge
 from avstack_msgs.msg import BoxTrackArray
+from avtrust.estimator import TrustEstimator
+from avtrust.measurement import ViewBasedPsm
+from avtrust.updater import TrustUpdater
 from geometry_msgs.msg import PolygonStamped
-from mate.estimator import TrustEstimator
-from mate.measurement import ViewBasedPsm
-from mate.updater import TrustUpdater
 from message_filters import ApproximateTimeSynchronizer, Subscriber
 from rclpy.node import Node
 from rclpy.time import Time
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
-from trust_msgs.msg import PsmArray as PsmArrayRos
-from trust_msgs.msg import TrustArray as TrustArrayRos
+from avtrust_msgs.msg import PsmArray as PsmArrayRos
+from avtrust_msgs.msg import TrustArray as TrustArrayRos
 
 from .bridge import TrustBridge
 
 
 class TrustEstimatorNode(Node):
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = False):
         super().__init__("trust_psm")
         self.verbose = verbose
         self.declare_parameter("n_agents", 4)
@@ -83,24 +83,24 @@ class TrustEstimatorNode(Node):
         # publish PSM messages
         self.publisher_agent_psms = self.create_publisher(
             PsmArrayRos,
-            "agent_psms",
+            "psms_agents",
             qos_profile=qos,
         )
         self.publisher_track_psms = self.create_publisher(
             PsmArrayRos,
-            "track_psms",
+            "psms_tracks",
             qos_profile=qos,
         )
 
         # publish trusts
         self.publisher_agent_trust = self.create_publisher(
             TrustArrayRos,
-            "agent_trust",
+            "trust_agents",
             qos_profile=qos,
         )
         self.publisher_track_trust = self.create_publisher(
             TrustArrayRos,
-            "track_trust",
+            "trust_tracks",
             qos_profile=qos,
         )
 

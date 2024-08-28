@@ -4,7 +4,7 @@ from glob import glob
 from setuptools import find_packages, setup
 
 
-package_name = "trust"
+package_name = "avtrust_bridge"
 
 setup(
     name=package_name,
@@ -26,8 +26,8 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "estimator = trust.estimator:main",
-            "visualizer = trust.visualizer:main",
+            "estimator = avtrust_bridge.estimator:main",
+            "visualizer = avtrust_bridge.visualizer:main",
             "agent_pub_sample = samples.AgentTrustSample:main",
             "track_pub_sample = samples.TrackTrustSample:main",
         ],

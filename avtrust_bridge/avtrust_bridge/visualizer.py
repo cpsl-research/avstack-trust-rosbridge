@@ -20,10 +20,11 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import rclpy
+from avstack_bridge import Bridge
 from rclpy.node import Node
 from scipy.stats import beta
 
-from trust_msgs.msg import TrustArray as TrustArrayRos
+from avtrust_msgs.msg import TrustArray as TrustArrayRos
 
 from .bridge import TrustBridge
 
@@ -82,7 +83,7 @@ class TrustVisualizer(Node):
         super().__init__("trust_visualizer")
 
         # Initialize figure and axes and save to class
-        self.fig, self.axs = plt.subplots(2, 2, figsize=(20, 10))
+        self.fig, self.axs = plt.subplots(2, 2, figsize=(10, 6))
         for i, txt in enumerate(["Agent", "Track"]):
             # -- attributes for bar plot
             self.axs[i, 0].set_title(f"{txt} Trust Mean")
@@ -100,6 +101,7 @@ class TrustVisualizer(Node):
             self.axs[i, 1].grid()
 
         plt.tight_layout()
+        self.reset()
 
         # x axis on the trust distribution
         npts = 1000
@@ -107,14 +109,6 @@ class TrustVisualizer(Node):
 
         # create Thread lock to prevent multiaccess threading errors
         self._lock = threading.Lock()
-
-        # create initial values to plot
-        self.agent_ids_active = set()
-        self.agent_trust_data = {}
-        self.agent_trust_plot = {"bar": {}, "dist": {}}
-        self.track_ids_active = set()
-        self.track_trust_data = {}
-        self.track_trust_plot = {"bar": {}, "dist": {}}
 
         # create subscriber
         qos = rclpy.qos.QoSProfile(
@@ -126,20 +120,57 @@ class TrustVisualizer(Node):
         self.cbg = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
         self.sub_agent_trust = self.create_subscription(
             TrustArrayRos,
-            "agent_trust",
+            "trust_agents",
             partial(self.trust_callback, self.agent_trust_data, self.agent_ids_active),
             qos_profile=qos,
             callback_group=self.cbg,
         )
         self.sub_track_trust = self.create_subscription(
             TrustArrayRos,
-            "track_trust",
+            "trust_tracks",
             partial(self.trust_callback, self.track_trust_data, self.track_ids_active),
             qos_profile=qos,
             callback_group=self.cbg,
         )
 
-    def trust_callback(self, datastruct: dict, actives: list, msg: TrustArrayRos):
+    def reset(self):
+        """Reset the lines in the plots"""
+        self.last_timestamp = -np.inf
+
+        # reset data structures
+        self.agent_ids_active = set()
+        self.agent_trust_data = {}
+        self.agent_trust_plot = {"bar": {}, "dist": {}}
+        self.track_ids_active = set()
+        self.track_trust_data = {}
+        self.track_trust_plot = {"bar": {}, "dist": {}}
+
+    def clear(self):
+        self.last_timestamp = -np.inf
+        self.agent_ids_active.clear()
+        self.track_ids_active.clear()
+        for k in self.agent_trust_data:
+            self.agent_trust_data[k].clear()
+        for k in self.track_trust_data:
+            self.track_trust_data[k].clear()
+        for values in self.agent_trust_plot.values():
+            for k2 in list(values.keys()):
+                try:
+                    values[k2].remove()
+                    del values[k2]
+                except (ValueError, KeyError):
+                    pass
+        for values in self.track_trust_plot.values():
+            for k2 in list(values.keys()):
+                try:
+                    values[k2].remove()
+                    del values[k2]
+                except (ValueError, KeyError):
+                    pass
+
+        # raise RuntimeError(str(self.track_trust_plot))
+
+    def trust_callback(self, datastruct: dict, actives: set, msg: TrustArrayRos):
         """Callback for subscriber
 
         Args:
@@ -147,7 +178,13 @@ class TrustVisualizer(Node):
         """
         # lock thread
         with self._lock:
-            trust_array = TrustBridge.ros_to_trust_array(msg)
+            # get trust data
+            trust_array = TrustBridge.trust_array_ros_to_avstack(msg)
+            timestamp = Bridge.rostime_to_time(msg.header.stamp)
+            if timestamp < self.last_timestamp:
+                self.clear()
+            else:
+                self.last_timestamp = timestamp
 
             # update values
             ids_active = set()
@@ -177,7 +214,7 @@ class TrustVisualizer(Node):
             for id_remove in ids_remove:
                 actives.remove(id_remove)
 
-    def plt_func(self, _, dynamic_ylim: bool = False):
+    def plt_func(self, _, dynamic_ylim: bool = False, static_y_max: float = 6.0):
         """Function for for adding data to axis.
 
         Args:
@@ -202,9 +239,18 @@ class TrustVisualizer(Node):
                 for idx, identifier in enumerate(data):
                     # -- check if still actively publishing data
                     if identifier not in active:
-                        ids_remove.append(identifier)
-                        plot["bar"][identifier].remove()
-                        plot["dist"][identifier].remove()
+                        try:
+                            ids_remove.append(identifier)
+                        except KeyError:
+                            continue
+                        try:
+                            plot["bar"][identifier].remove()
+                        except (ValueError, KeyError):
+                            pass
+                        try:
+                            plot["dist"][identifier].remove()
+                        except (ValueError, KeyError):
+                            pass
                         continue
 
                     # -- attributes
@@ -243,9 +289,9 @@ class TrustVisualizer(Node):
 
                     # -- set ylim
                     if dynamic_ylim:
-                        ylims[1] = max(5, min(20, max(pdfs) + 0.1))
+                        ylims[1] = max(static_y_max, min(20, max(pdfs) + 0.1))
                     else:
-                        ylims[1] = 5
+                        ylims[1] = static_y_max
 
                 # remove things
                 for id_remove in ids_remove:

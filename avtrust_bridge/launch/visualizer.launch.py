@@ -7,13 +7,13 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     trust_viz_config = os.path.join(
-        get_package_share_directory("trust"),
+        get_package_share_directory("avtrust_bridge"),
         "config",
         "visualizer.yaml",
     )
 
     trust_viz_node = Node(
-        package="trust",
+        package="avtrust_bridge",
         namespace="mate",
         executable="visualizer",
         name="trust_visualizer",

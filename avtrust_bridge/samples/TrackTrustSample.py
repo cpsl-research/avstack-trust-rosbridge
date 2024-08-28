@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Header
 
-from trust_msgs.msg import Trust, TrustArray
+from avtrust_msgs.msg import Trust, TrustArray
 
 
 def sample_trust_parameter(scale: float = 20.0):
