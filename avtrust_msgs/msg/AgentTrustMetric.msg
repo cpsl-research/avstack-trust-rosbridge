@@ -1,0 +1,6 @@
+std_msgs/Header header
+uint32 identifier
+bool agent_is_attacked
+float64 f1_score
+float64 area_above_cdf
+float64 f1_threshold

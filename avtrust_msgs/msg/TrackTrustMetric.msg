@@ -1,0 +1,4 @@
+std_msgs/Header header
+uint32 identifier
+float64 area_above_cdf
+bool assigned_to_truth

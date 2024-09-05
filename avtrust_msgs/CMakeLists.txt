@@ -12,8 +12,12 @@ find_package(rosidl_default_generators REQUIRED)
 
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/AgentTrustMetric.msg"
+  "msg/AgentTrustMetricArray.msg"
   "msg/Psm.msg"
   "msg/PsmArray.msg"
+  "msg/TrackTrustMetric.msg"
+  "msg/TrackTrustMetricArray.msg"
   "msg/Trust.msg"
   "msg/TrustArray.msg"
   DEPENDENCIES std_msgs
